@@ -9,6 +9,11 @@ extern fn init_lvgl(w: u32, h: u32, fb_adr: u32) void;
 extern fn lvgl_frame_count() u32;
 extern fn lv_tick_inc(u32) void;
 extern fn lv_timer_handler() u32;
+extern var input_device_data: extern struct {
+    x: i32,
+    y: i32,
+    is_pressed: bool,
+};
 
 export fn init() void {
     initMemory();
@@ -66,4 +71,13 @@ export fn popShouldDraw() bool {
     const frame_count = lvgl_frame_count();
     defer prev_frame_count = frame_count;
     return frame_count != prev_frame_count;
+}
+
+export fn setInputPosition(x: i32, y: i32) void {
+    input_device_data.x = x;
+    input_device_data.y = y;
+}
+
+export fn setInputPressed(is_pressed: bool) void {
+    input_device_data.is_pressed = is_pressed;
 }
