@@ -8,6 +8,7 @@ static uint32_t frame_count;
 
 static void flush_cb(lv_disp_drv_t*, const lv_area_t*, lv_color_t*) {
     ++frame_count;
+    lv_disp_flush_ready(&disp_driver);
 }
 
 uint32_t lvgl_frame_count(void) {
