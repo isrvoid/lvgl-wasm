@@ -20,9 +20,12 @@ fn getLvglSources(allocator: std.mem.Allocator) ![]const []const u8 {
 pub fn build(b: *std.build.Builder) !void {
     const wasm_target = std.zig.CrossTarget.parse(.{ .arch_os_abi = "wasm32-freestanding" }) catch unreachable;
 
-    const gui = b.addStaticLibrary("lvgl_gui", "src/lvgl_gui.c");
-    gui.setTarget(wasm_target);
-    gui.setBuildMode(.ReleaseFast);
+    const gui = b.addStaticLibrary(.{
+        .name = "lvgl_gui",
+        .root_source_file = .{ .path = "src/lvgl_gui.c" },
+        .target = wasm_target,
+        .optimize = .ReleaseFast,
+    });
     gui.addCSourceFile("src/libc/lvgl_libc.c", &[0][]u8{});
     gui.addCSourceFile("src/lvgl_init.c", &[0][]u8{});
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -31,9 +34,12 @@ pub fn build(b: *std.build.Builder) !void {
     gui.addIncludePath("src/libc/include");
     gui.addIncludePath("lvgl/src");
 
-    const bind = b.addSharedLibrary("webfb", "src/webfb_bind.zig", .unversioned);
-    bind.setTarget(wasm_target);
-    bind.setBuildMode(.ReleaseFast);
+    const bind = b.addSharedLibrary(.{
+        .name = "webfb",
+        .root_source_file = .{ .path = "src/webfb_bind.zig" },
+        .target = wasm_target,
+        .optimize = .ReleaseFast,
+    });
     bind.linkLibrary(gui);
     bind.rdynamic = true;
     bind.strip = true;
