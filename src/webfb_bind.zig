@@ -30,7 +30,7 @@ fn initMemory() void {
 }
 
 // global_base is set to page 8 in build.zig
-const lvgl_mem_page = 24; // FIXME issue with smaller offset
+const lvgl_mem_page = 32; // FIXME issue with smaller offset
 const buffer_adr = std.mem.page_size * (lvgl_mem_page + 1);
 const image_width = 800;
 const image_height = 480;
