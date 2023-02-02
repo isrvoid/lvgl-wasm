@@ -45,17 +45,14 @@
    MEMORY SETTINGS
  *=========================*/
 
-#define WASM_MEM_PAGE_SIZE (1u << 16)
-#define WASM_LVGL_MEM_PAGE_INDEX 16
-
 /*1: use custom malloc/free, 0: use the built-in `lv_mem_alloc()` and `lv_mem_free()`*/
 #define LV_MEM_CUSTOM 0
 #if LV_MEM_CUSTOM == 0
     /*Size of the memory available for `lv_mem_alloc()` in bytes (>= 2kB)*/
-    #define LV_MEM_SIZE WASM_MEM_PAGE_SIZE
+    #define LV_MEM_SIZE (48U * 1024U)          /*[bytes]*/
 
     /*Set an address for the memory pool instead of allocating it as a normal array. Can be in external SRAM too.*/
-    #define LV_MEM_ADR (WASM_MEM_PAGE_SIZE * WASM_LVGL_MEM_PAGE_INDEX)     /*0: unused*/
+    #define LV_MEM_ADR 0     /*0: unused*/
     /*Instead of an address give a memory allocator that will be called to get a memory pool for LVGL. E.g. my_malloc*/
     #if LV_MEM_ADR == 0
         #undef LV_MEM_POOL_INCLUDE

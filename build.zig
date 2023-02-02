@@ -33,8 +33,6 @@ pub fn build(b: *std.build.Builder) !void {
     bind.linkLibrary(gui);
     bind.rdynamic = true;
     bind.strip = true;
-    const wasm_page_size = 1 << 16;
-    bind.global_base = 8 * wasm_page_size;
     bind.install();
 }
 

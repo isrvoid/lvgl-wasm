@@ -14,9 +14,9 @@ uint32_t lvgl_frame_count(void) {
     return frame_count;
 }
 
-static void init_display(uint32_t w, uint32_t h, uint32_t fb_adr) {
+static void init_display(void* fb, uint32_t w, uint32_t h) {
     static lv_disp_draw_buf_t disp_buffer;
-    lv_disp_draw_buf_init(&disp_buffer, (void*)fb_adr, NULL, w * h);
+    lv_disp_draw_buf_init(&disp_buffer, fb, NULL, w * h);
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buffer;
     disp_drv.flush_cb = flush_cb;
@@ -47,8 +47,8 @@ static void init_input(void) {
     assert(p_indev);
 }
 
-void init_lvgl(uint32_t w, uint32_t h, uint32_t fb_adr) {
+void init_lvgl(void* fb, uint32_t w, uint32_t h) {
     lv_init();
-    init_display(w, h, fb_adr);
+    init_display(fb, w, h);
     init_input();
 }
