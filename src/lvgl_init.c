@@ -1,8 +1,7 @@
 #include <lvgl.h>
 
 static lv_disp_drv_t disp_drv;
-static lv_indev_drv_t indev_drv;
-
+static lv_indev_t* encoder_indev;
 static uint32_t frame_count;
 
 static void flush_cb(lv_disp_drv_t*, const lv_area_t*, lv_color_t*) {
@@ -30,25 +29,55 @@ static void init_display(void* fb, uint32_t w, uint32_t h) {
 struct {
     int32_t x;
     int32_t y;
+    int32_t encoder_pos;
     bool is_pressed;
+    bool is_encoder_pressed;
 } input_device_data;
 
-static void input_cb(lv_indev_drv_t*, lv_indev_data_t* data) {
+static void pointer_device_cb(lv_indev_drv_t*, lv_indev_data_t* data) {
     data->point.x = input_device_data.x;
     data->point.y = input_device_data.y;
     data->state = input_device_data.is_pressed ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
 }
 
+static void rotary_encoder_cb(lv_indev_drv_t*, lv_indev_data_t* data) {
+    static int32_t prev_pos;
+    const int32_t pos = input_device_data.encoder_pos;
+    data->enc_diff = (int16_t)(pos - prev_pos);
+    prev_pos = pos;
+    data->state = input_device_data.is_encoder_pressed ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
+}
+
+static void init_pointer_device(void) {
+    static lv_indev_drv_t drv;
+    lv_indev_drv_init(&drv);
+    drv.type = LV_INDEV_TYPE_POINTER;
+    drv.read_cb = pointer_device_cb;
+    lv_indev_t* indev = lv_indev_drv_register(&drv);
+    assert(indev);
+}
+
+static void init_rotary_encoder(void) {
+    static lv_indev_drv_t drv;
+    lv_indev_drv_init(&drv);
+    drv.type = LV_INDEV_TYPE_ENCODER;
+    drv.read_cb = rotary_encoder_cb;
+    encoder_indev = lv_indev_drv_register(&drv);
+    assert(encoder_indev);
+}
+
 static void init_input(void) {
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = input_cb;
-    lv_indev_t* p_indev = lv_indev_drv_register(&indev_drv);
-    assert(p_indev);
+    init_pointer_device();
+    init_rotary_encoder();
 }
 
 void init_lvgl(void* fb, uint32_t w, uint32_t h) {
     lv_init();
     init_display(fb, w, h);
     init_input();
+}
+
+void set_rotary_encoder_group(lv_group_t* group) {
+    assert(encoder_indev);
+    lv_indev_set_group(encoder_indev, group);
 }

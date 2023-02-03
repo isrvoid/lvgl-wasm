@@ -12,7 +12,9 @@ extern fn lv_timer_handler() u32;
 extern var input_device_data: extern struct {
     x: i32,
     y: i32,
+    encoder_pos: i32,
     is_pressed: bool,
+    is_encoder_pressed: bool,
 };
 
 export fn init() void {
@@ -74,6 +76,17 @@ export fn setInputPosition(x: i32, y: i32) void {
     input_device_data.y = y;
 }
 
-export fn setInputPressed(is_pressed: bool) void {
-    input_device_data.is_pressed = is_pressed;
+export fn setInputPressed(state: bool) void {
+    input_device_data.is_pressed = state;
+}
+
+export fn setWheelDelta(val: i32) void {
+    // convert potentially large pixel value to encoder increment
+    // invert y: scrolling the wheel forward should increase a value
+    const inc = @as(i32, @boolToInt(val < 0)) - @as(i32, @boolToInt(val > 0));
+    input_device_data.encoder_pos +%= inc;
+}
+
+export fn setWheelPressed(state: bool) void {
+    input_device_data.is_encoder_pressed = state;
 }
