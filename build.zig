@@ -16,12 +16,13 @@ pub fn build(b: *std.build.Builder) !void {
     });
     gui.addCSourceFile("src/libc/lvgl_libc.c", &.{});
     gui.addCSourceFile("src/lvgl_init.c", &.{});
+    gui.addCSourceFile("src/example/basic_power_supply.c", &.{});
     var arena = heap.ArenaAllocator.init(heap.page_allocator);
     const lvgl_sources = try getLvglSources(arena.allocator());
     gui.addCSourceFiles(lvgl_sources, &.{});
     gui.addIncludePath("src/libc/include");
     gui.addIncludePath("lvgl/src");
-    gui.addPackage(.{ .name = "init_image", .source = .{ .path = "src/init_image.zig" } });
+    gui.addAnonymousModule("init_image", .{ .source_file = .{ .path = "src/init_image.zig" } });
     gui.addObjectFile("images/images.zig");
 
     const bind = b.addSharedLibrary(.{

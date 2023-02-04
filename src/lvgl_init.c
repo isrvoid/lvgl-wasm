@@ -67,8 +67,8 @@ static void init_rotary_encoder(void) {
 }
 
 static void init_input(void) {
-    init_pointer_device();
     init_rotary_encoder();
+    init_pointer_device();
 }
 
 void init_lvgl(void* fb, uint32_t w, uint32_t h) {
