@@ -1,4 +1,5 @@
 #include <lvgl.h>
+#include "lvgl_gui.h"
 
 static lv_disp_drv_t disp_drv;
 static lv_indev_t* encoder_indev;
@@ -26,13 +27,7 @@ static void init_display(void* fb, uint32_t w, uint32_t h) {
     assert(p_disp);
 }
 
-struct {
-    int32_t x;
-    int32_t y;
-    int32_t encoder_pos;
-    bool is_pressed;
-    bool is_encoder_pressed;
-} input_device_data;
+input_device_data_t input_device_data;
 
 static void pointer_device_cb(lv_indev_drv_t*, lv_indev_data_t* data) {
     data->point.x = input_device_data.x;

@@ -31,6 +31,7 @@ pub fn build(b: *std.build.Builder) !void {
         .target = wasm_target,
         .optimize = .ReleaseFast,
     });
+    bind.addIncludePath("src");
     bind.linkLibrary(gui);
     bind.rdynamic = true;
     bind.strip = true;

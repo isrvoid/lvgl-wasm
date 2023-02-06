@@ -1,26 +1,14 @@
 const std = @import("std");
 const mem = std.mem;
+const gui = @cImport({@cInclude("lvgl_gui.h");});
 
 extern fn js_log_int(i32) void;
 extern fn js_assert_fail(u32, u32, u32, u32, i32, u32, u32) void;
 
-extern fn create_lvgl_gui() void;
-extern fn init_lvgl(fb: *void, w: u32, h: u32) void;
-extern fn lvgl_frame_count() u32;
-extern fn lv_tick_inc(u32) void;
-extern fn lv_timer_handler() u32;
-extern var input_device_data: extern struct {
-    x: i32,
-    y: i32,
-    encoder_pos: i32,
-    is_pressed: bool,
-    is_encoder_pressed: bool,
-};
-
 export fn init() void {
     initMemory();
-    init_lvgl(@ptrCast(*void, frame_buf.ptr), image_width, image_height);
-    create_lvgl_gui();
+    gui.init_lvgl(@ptrCast(*void, frame_buf.ptr), image_width, image_height);
+    gui.create_lvgl_gui();
 }
 
 fn initMemory() void {
@@ -75,34 +63,34 @@ export fn imageHeight() u32 {
 
 var prev_monotime: u32 = 0;
 export fn update(monotime_ms: u32) void {
-    lv_tick_inc(monotime_ms -% prev_monotime);
+    gui.lv_tick_inc(monotime_ms -% prev_monotime);
     prev_monotime = monotime_ms;
-    _ = lv_timer_handler();
+    _ = gui.lv_timer_handler();
 }
 
 var prev_frame_count: u32 = 0;
 export fn popShouldDraw() bool {
-    const frame_count = lvgl_frame_count();
+    const frame_count = gui.lvgl_frame_count();
     defer prev_frame_count = frame_count;
     return frame_count != prev_frame_count;
 }
 
 export fn setInputPosition(x: i32, y: i32) void {
-    input_device_data.x = x;
-    input_device_data.y = y;
+    gui.input_device_data.x = x;
+    gui.input_device_data.y = y;
 }
 
 export fn setInputPressed(state: bool) void {
-    input_device_data.is_pressed = state;
+    gui.input_device_data.is_pressed = state;
 }
 
 export fn setWheelDelta(val: i32) void {
     // convert potentially large pixel value to encoder increment
     // invert y: scrolling the wheel forward should increase a value
     const inc = @as(i32, @boolToInt(val < 0)) - @as(i32, @boolToInt(val > 0));
-    input_device_data.encoder_pos +%= inc;
+    gui.input_device_data.encoder_pos +%= inc;
 }
 
 export fn setWheelPressed(state: bool) void {
-    input_device_data.is_encoder_pressed = state;
+    gui.input_device_data.is_encoder_pressed = state;
 }
