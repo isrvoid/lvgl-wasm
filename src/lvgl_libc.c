@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
+
+uintptr_t __stack_chk_guard;
 
 char* strchr(const char* s, int c) {
     while (*s != '\0' && *s != c)

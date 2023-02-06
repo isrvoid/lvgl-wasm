@@ -2,7 +2,7 @@ const std = @import("std");
 const mem = std.mem;
 
 extern fn js_log_int(i32) void;
-extern fn js_assert_failure(u32, u32, u32) void;
+extern fn js_assert_fail(u32, u32, u32, u32, i32, u32, u32) void;
 
 extern fn create_lvgl_gui() void;
 extern fn init_lvgl(fb: *void, w: u32, h: u32) void;
@@ -35,10 +35,26 @@ const image_height = 480;
 var debug_page: *[mem.page_size]u8 = undefined;
 var frame_buf: []u32 = undefined;
 
-export fn _assert_failure(filename: [*:0]const u8, line: u32) void {
-    const len = mem.indexOfSentinel(u8, 0, filename);
-    mem.copy(u8, debug_page, filename[0..len]);
-    js_assert_failure(@ptrToInt(debug_page), len, line);
+fn assert_fail(expr: [*:0]const u8, file: [*:0]const u8, line: i32, func: [*:0]const u8) callconv(.C) void {
+    const expr_adr = @ptrToInt(debug_page);
+    const expr_len = mem.indexOfSentinel(u8, 0, expr);
+    const file_adr = expr_adr + expr_len;
+    const file_len = mem.indexOfSentinel(u8, 0, file);
+    const func_adr = file_adr + file_len;
+    const func_len = mem.indexOfSentinel(u8, 0, func);
+    mem.copy(u8, @intToPtr([*]u8, expr_adr)[0..expr_len], expr[0..expr_len]);
+    mem.copy(u8, @intToPtr([*]u8, file_adr)[0..file_len], file[0..file_len]);
+    mem.copy(u8, @intToPtr([*]u8, func_adr)[0..func_len], func[0..func_len]);
+    js_assert_fail(expr_adr, expr_len, file_adr, file_len, line, func_adr, func_len);
+}
+
+fn stack_check_fail() callconv(.C) void {
+    @panic("stack check failed");
+}
+
+comptime {
+    @export(assert_fail, .{ .name = "__assert_fail", .visibility = .hidden });
+    @export(stack_check_fail, .{ .name = "__stack_chk_fail", .visibility = .hidden });
 }
 
 export fn bufferAddress() u32 {
