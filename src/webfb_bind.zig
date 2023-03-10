@@ -1,79 +1,70 @@
 const std = @import("std");
-const mem = std.mem;
-const gui = @cImport({@cInclude("lvgl_gui.h");});
+const page_size = std.mem.page_size;
+const gui = @cImport({ @cInclude("lvgl_gui.h"); });
 
-extern fn js_log_int(i32) void;
-extern fn js_assert_fail(u32, u32, u32, u32, i32, u32, u32) void;
+const frame_width = 800;
+const frame_height = 480;
+
+export fn initTempPage() void {
+    temp_page = std.heap.page_allocator.create([page_size]u8) catch @panic("alloc failed");
+}
+
+export fn tempPageAdr() u32 {
+    return @ptrToInt(temp_page);
+}
+var temp_page: *[page_size]u8 = undefined;
 
 export fn init() void {
     initMemory();
-    gui.init_lvgl(@ptrCast(*void, frame_buf.ptr), image_width, image_height);
+    gui.init_lvgl(@ptrCast(*void, frame_buf.ptr), frame_width, frame_height);
     gui.create_lvgl_gui();
 }
 
-fn initMemory() void {
+export fn initMemory() void {
     const pa = std.heap.page_allocator;
-    debug_page = pa.create([mem.page_size]u8) catch unreachable;
-    frame_buf = pa.alloc(u32, image_width * image_height) catch unreachable;
+    send_buf = pa.create([page_size]u8) catch @panic("alloc failed");
+    recv_buf = pa.create([page_size]u8) catch @panic("alloc failed");
+    frame_buf = pa.alloc(u32, frame_width * frame_height) catch @panic("alloc failed");
 }
-
-const image_width = 800;
-const image_height = 480;
-
-var debug_page: *[mem.page_size]u8 = undefined;
 var frame_buf: []u32 = undefined;
+var recv_buf: *[page_size]u8 = undefined;
+var send_buf: *[page_size]u8 = undefined;
 
-fn assert_fail(expr: [*:0]const u8, file: [*:0]const u8, line: i32, func: [*:0]const u8) callconv(.C) void {
-    const expr_adr = @ptrToInt(debug_page);
-    const expr_len = mem.indexOfSentinel(u8, 0, expr);
-    const file_adr = expr_adr + expr_len;
-    const file_len = mem.indexOfSentinel(u8, 0, file);
-    const func_adr = file_adr + file_len;
-    const func_len = mem.indexOfSentinel(u8, 0, func);
-    mem.copy(u8, @intToPtr([*]u8, expr_adr)[0..expr_len], expr[0..expr_len]);
-    mem.copy(u8, @intToPtr([*]u8, file_adr)[0..file_len], file[0..file_len]);
-    mem.copy(u8, @intToPtr([*]u8, func_adr)[0..func_len], func[0..func_len]);
-    js_assert_fail(expr_adr, expr_len, file_adr, file_len, line, func_adr, func_len);
+export fn writeBufferAdrLen() i32 {
+    const p = @ptrCast(*[6]u32, @alignCast(4, temp_page));
+    p[0] = @ptrToInt(frame_buf.ptr);
+    p[1] = frame_width * frame_height * 4;
+    p[2] = @ptrToInt(recv_buf);
+    p[3] = recv_buf.len;
+    p[4] = @ptrToInt(send_buf);
+    p[5] = send_buf.len;
+    return p.len;
 }
 
-fn stack_check_fail() callconv(.C) void {
-    @panic("stack check failed");
+export fn frameWidth() u32 {
+    return frame_width;
 }
 
-comptime {
-    @export(assert_fail, .{ .name = "__assert_fail", .visibility = .hidden });
-    @export(stack_check_fail, .{ .name = "__stack_chk_fail", .visibility = .hidden });
+export fn frameHeight() u32 {
+    return frame_height;
 }
 
-export fn bufferAddress() u32 {
-    return @intCast(u32, @ptrToInt(frame_buf.ptr));
-}
-
-export fn bufferSize() u32 {
-    return image_width * image_height * 4;
-}
-
-export fn imageWidth() u32 {
-    return image_width;
-}
-
-export fn imageHeight() u32 {
-    return image_height;
-}
-
-var prev_monotime: u32 = 0;
 export fn update(monotime_ms: u32) void {
     gui.lv_tick_inc(monotime_ms -% prev_monotime);
     prev_monotime = monotime_ms;
     _ = gui.lv_timer_handler();
 }
+var prev_monotime: u32 = 0;
 
-var prev_frame_count: u32 = 0;
-export fn popShouldDraw() bool {
-    const frame_count = gui.lvgl_frame_count();
-    defer prev_frame_count = frame_count;
-    return frame_count != prev_frame_count;
+export fn popShouldRender() bool {
+    const change_index = gui.lvgl_change_index();
+    defer prev_change_index = change_index;
+    return change_index != prev_change_index;
 }
+var prev_change_index: u32 = 0;
+
+export fn setConnected(_: bool) void {}
+export fn pushReceived(_: u32) void {}
 
 export fn setInputPosition(x: i32, y: i32) void {
     gui.input_device_data.x = x;
@@ -93,4 +84,20 @@ export fn setWheelDelta(val: i32) void {
 
 export fn setWheelPressed(state: bool) void {
     gui.input_device_data.is_encoder_pressed = state;
+}
+
+comptime {
+    @export(assert_fail, .{ .name = "__assert_fail", .visibility = .hidden });
+    @export(stack_check_fail, .{ .name = "__stack_chk_fail", .visibility = .hidden });
+}
+
+fn assert_fail(expr: [*:0]const u8, file: [*:0]const u8, line: i32, func: [*:0]const u8) callconv(.C) void {
+    const msg = std.fmt.bufPrint(temp_page, "{s}:{}: {s}: Assertion '{s}' failed.", .{file, line, func, expr}) catch unreachable;
+    js_assert_fail(msg.len);
+}
+
+extern fn js_assert_fail(u32) void;
+
+fn stack_check_fail() callconv(.C) void {
+    @panic("stack check failed");
 }

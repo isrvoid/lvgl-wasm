@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 void init_lvgl(void* fb, uint32_t w, uint32_t h);
-uint32_t lvgl_frame_count(void);
+uint32_t lvgl_change_index(void);
 void create_lvgl_gui(void);
 
 typedef struct {

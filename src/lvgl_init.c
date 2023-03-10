@@ -3,15 +3,15 @@
 
 static lv_disp_drv_t disp_drv;
 static lv_indev_t* encoder_indev;
-static uint32_t frame_count;
+static uint32_t change_index;
 
 static void flush_cb(lv_disp_drv_t*, const lv_area_t*, lv_color_t*) {
-    ++frame_count;
+    ++change_index;
     lv_disp_flush_ready(&disp_drv);
 }
 
-uint32_t lvgl_frame_count(void) {
-    return frame_count;
+uint32_t lvgl_change_index(void) {
+    return change_index;
 }
 
 static void init_display(void* fb, uint32_t w, uint32_t h) {
