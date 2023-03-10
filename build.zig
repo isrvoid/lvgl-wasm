@@ -16,7 +16,6 @@ pub fn build(b: *std.build.Builder) !void {
     });
     gui.addCSourceFile("src/lvgl_libc.c", &.{});
     gui.addCSourceFile("src/lvgl_init.c", &.{});
-    gui.addCSourceFile("src/example/basic_power_supply.c", &.{});
     var arena = heap.ArenaAllocator.init(heap.page_allocator);
     const lvgl_sources = try getLvglSources(arena.allocator());
     gui.addCSourceFiles(lvgl_sources, &.{});
