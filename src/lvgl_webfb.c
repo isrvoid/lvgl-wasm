@@ -1,5 +1,5 @@
-#include <lvgl.h>
-#include "lvgl_gui.h"
+#include "lvgl_webfb.h"
+#include "../lvgl/lvgl.h"
 
 static lv_disp_drv_t disp_drv;
 static lv_indev_t* encoder_indev;

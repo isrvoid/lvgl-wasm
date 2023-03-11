@@ -8,21 +8,26 @@ pub fn build(b: *std.build.Builder) !void {
     const wasm_target = std.zig.CrossTarget.parse(.{ .arch_os_abi = "wasm32-freestanding" }) catch unreachable;
     try maybeGenerateImageBitmaps();
 
-    const gui = b.addStaticLibrary(.{
-        .name = "lvgl_gui",
-        .root_source_file = .{ .path = "src/lvgl_gui.c" },
+    const lvgl = b.addStaticLibrary(.{
+        .name = "lvgl_webfb",
+        .root_source_file = .{ .path = "src/lvgl_webfb.c" },
         .target = wasm_target,
         .optimize = .ReleaseFast,
     });
-    gui.addCSourceFile("src/lvgl_libc.c", &.{});
-    gui.addCSourceFile("src/lvgl_init.c", &.{});
+    lvgl.addCSourceFile("src/lvgl_libc.c", &.{});
     var arena = heap.ArenaAllocator.init(heap.page_allocator);
     const lvgl_sources = try getLvglSources(arena.allocator());
-    gui.addCSourceFiles(lvgl_sources, &.{});
-    gui.linkLibC();
-    gui.addIncludePath("lvgl/src");
-    gui.addAnonymousModule("init_image", .{ .source_file = .{ .path = "src/init_image.zig" } });
-    gui.addObjectFile("images/images.zig");
+    lvgl.addCSourceFiles(lvgl_sources, &.{});
+    lvgl.linkLibC();
+    lvgl.addIncludePath("src");
+
+    const images = b.addObject(.{
+        .name = "images",
+        .root_source_file = .{ .path = "images/images.zig" },
+        .target = wasm_target,
+        .optimize = .ReleaseFast,
+    });
+    images.addAnonymousModule("init_image", .{ .source_file = .{ .path = "src/init_image.zig" } });
 
     const bind = b.addSharedLibrary(.{
         .name = "webfb",
@@ -30,8 +35,11 @@ pub fn build(b: *std.build.Builder) !void {
         .target = wasm_target,
         .optimize = .ReleaseFast,
     });
+    bind.addCSourceFile("src/lvgl_gui.c", &.{});
     bind.addIncludePath("src");
-    bind.linkLibrary(gui);
+    bind.addIncludePath("lvgl/src");
+    bind.linkLibrary(lvgl);
+    bind.addObject(images);
     bind.rdynamic = true;
     bind.strip = true;
     bind.install();

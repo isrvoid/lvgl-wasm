@@ -1,6 +1,6 @@
 const std = @import("std");
 const page_size = std.mem.page_size;
-const gui = @cImport({ @cInclude("lvgl_gui.h"); });
+const gui = @cImport({ @cInclude("lvgl_webfb.h"); });
 
 const frame_width = 800;
 const frame_height = 480;
