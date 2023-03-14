@@ -72,7 +72,10 @@ void init_lvgl(void* fb, uint32_t w, uint32_t h) {
     init_input();
 }
 
-void set_rotary_encoder_group(lv_group_t* group) {
+// int return to match the default signature and avoid 'wasm validation error',
+// in case the project calls it without prior declaration
+int set_rotary_encoder_group(lv_group_t* group) {
     assert(encoder_indev);
     lv_indev_set_group(encoder_indev, group);
+    return 0;
 }
