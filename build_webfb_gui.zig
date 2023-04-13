@@ -13,14 +13,14 @@ const GuiBuildOptions = struct {
     img_dir: ?[]const u8 = null,
 };
 
-pub fn addWebfbGui(b: *Build, opt: GuiBuildOptions) void {
+pub fn addWebfbGui(b: *Build, opt: GuiBuildOptions) *Build.CompileStep {
     const wasm = wasmBinary(b, opt.name);
     addLvgl(wasm);
     addGui(wasm, opt.src_dir);
     if (opt.img_dir) |dir|
         addImages(b, wasm, dir);
 
-    wasm.install();
+    return wasm;
 }
 
 pub fn wasmBinary(b: *Build, name: []const u8) *Build.CompileStep {
