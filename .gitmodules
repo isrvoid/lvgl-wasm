@@ -3,4 +3,4 @@
 	url = https://github.com/lvgl/lvgl.git
 [submodule "zpng"]
 	path = zpng
-	url = https://github.com/silversquirl/zpng.git
+	url = https://github.com/isrvoid/zpng.git
