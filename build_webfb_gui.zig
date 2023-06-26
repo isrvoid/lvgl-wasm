@@ -147,10 +147,10 @@ fn writeBitmap(bmp: zpng.Image, file: fs.File) !void {
     var wr = buf.writer();
     var pix8: [4]u8 = undefined;
     for (bmp.pixels) |pix| {
-        pix8[0] = @truncate(u8, pix[0] >> 8);
-        pix8[1] = @truncate(u8, pix[1] >> 8);
-        pix8[2] = @truncate(u8, pix[2] >> 8);
-        pix8[3] = @truncate(u8, pix[3] >> 8);
+        pix8[0] = @truncate(pix[0] >> 8);
+        pix8[1] = @truncate(pix[1] >> 8);
+        pix8[2] = @truncate(pix[2] >> 8);
+        pix8[3] = @truncate(pix[3] >> 8);
         try wr.writeAll(&pix8);
     }
     try wr.writeAll(mem.asBytes(&bmp.width));

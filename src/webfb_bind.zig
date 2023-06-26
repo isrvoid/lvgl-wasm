@@ -10,13 +10,13 @@ export fn initTempPage() void {
 }
 
 export fn tempPageAdr() u32 {
-    return @ptrToInt(temp_page);
+    return @intFromPtr(temp_page);
 }
 var temp_page: *[page_size]u8 = undefined;
 
 export fn init() void {
     initMemory();
-    gui.init_lvgl(@ptrCast(*void, frame_buf.ptr), frame_width, frame_height);
+    gui.init_lvgl(@ptrCast(frame_buf.ptr), frame_width, frame_height);
     gui.create_lvgl_gui();
 }
 
@@ -31,12 +31,12 @@ var recv_buf: *[page_size]u8 = undefined;
 var send_buf: *[page_size]u8 = undefined;
 
 export fn writeBufferAdrLen() i32 {
-    const p = @ptrCast(*[6]u32, @alignCast(4, temp_page));
-    p[0] = @ptrToInt(frame_buf.ptr);
+    const p: *[6]u32 = @ptrCast(@alignCast(temp_page));
+    p[0] = @intFromPtr(frame_buf.ptr);
     p[1] = frame_width * frame_height * 4;
-    p[2] = @ptrToInt(recv_buf);
+    p[2] = @intFromPtr(recv_buf);
     p[3] = recv_buf.len;
-    p[4] = @ptrToInt(send_buf);
+    p[4] = @intFromPtr(send_buf);
     p[5] = send_buf.len;
     return p.len;
 }
@@ -78,7 +78,7 @@ export fn setInputPressed(state: bool) void {
 export fn setWheelDelta(val: i32) void {
     // convert potentially large pixel value to encoder increment
     // invert y: scrolling the wheel forward should increase a value
-    const inc = @as(i32, @boolToInt(val < 0)) - @as(i32, @boolToInt(val > 0));
+    const inc = @as(i32, @intFromBool(val < 0)) - @as(i32, @intFromBool(val > 0));
     gui.input_device_data.encoder_pos +%= inc;
 }
 
